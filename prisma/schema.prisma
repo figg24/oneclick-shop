@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  stores    Store[]
+}
+
+model Store {
+  id        String   @id @default(uuid())
+  ownerId   String
+  name      String
+  subdomain String   @unique
+  currency  String   @default("USD")
+  createdAt DateTime @default(now())
+  owner     User     @relation(fields: [ownerId], references: [id])
+  products  Product[]
+  settings  Setting?
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  storeId     String
+  title       String
+  slug        String   @unique
+  description String?
+  priceCents  Int
+  fileUrl     String
+  coverUrl    String?
+  status      String   @default("draft")
+  createdAt   DateTime @default(now())
+  store       Store    @relation(fields: [storeId], references: [id])
+}
+
+model Purchase {
+  id                    String   @id @default(uuid())
+  userId                String
+  productId             String
+  amountCents           Int
+  currency              String
+  stripePaymentIntentId String?
+  createdAt             DateTime @default(now())
+}
+
+model Setting {
+  id              String  @id @default(uuid())
+  storeId         String  @unique
+  priceMode       String  @default("recommended")
+  adBudgetDaily   Int     @default(5)
+  store           Store   @relation(fields: [storeId], references: [id])
+}
